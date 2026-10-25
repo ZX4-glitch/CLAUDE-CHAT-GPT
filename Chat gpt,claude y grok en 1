@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZX4-PRODUCTION</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    
+    .response-box {
+      max-height: 420px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .response-box::-webkit-scrollbar { width: 6px; }
+    .response-box::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    
+    .loading-dot {
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent mb-2">
+        ZX4-PRODUCTION
+      </h1>
+      <p class="text-zinc-400 text-sm">
+        3 modelos responden a la vez → luego se genera la <span class="text-amber-400 font-medium">mejor idea combinada</span>
+      </p>
+    </header>
+
+    <!-- API Key -->
+    <div class="mb-6 bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+      <div class="flex-1">
+        <label class="block text-xs font-medium text-green-400 mb-1.5">
+          <i class="fa-solid fa-key mr-1"></i> Groq API Key
+        </label>
+        <input type="password" id="apiKey" placeholder="gsk_... (pon tu clave aquí)"
+               class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/50" />
+      </div>
+    </div>
+
+    <!-- Question -->
+    <div class="mb-8 relative">
+      <textarea id="question" rows="4" 
+                placeholder="Escribe tu pregunta aquí..."
+                class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-5 py-4 text-base focus:outline-none focus:ring-2 focus:ring-green-500/50 resize-none placeholder:text-zinc-500"></textarea>
+      <div class="absolute bottom-3 right-3 flex gap-2">
+        <button id="clearBtn" class="text-zinc-500 hover:text-zinc-300 text-sm px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition">
+          Limpiar
+        </button>
+        <button id="sendBtn" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-medium px-5 py-1.5 rounded-lg flex items-center gap-2 transition shadow-lg shadow-green-900/30">
+          <i class="fa-solid fa-paper-plane text-sm"></i>
+          Preguntar a los 3
+        </button>
+      </div>
+    </div>
+
+    <!-- 3 Models Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+
+      <!-- Model 1 -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
+        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-zinc-800 bg-blue-950/20">
+          <div class="w-9 h-9 rounded-lg bg-blue-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-bolt text-blue-400 text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-blue-300">ChatGPT</h3>
+            <p class="text-xs text-zinc-500">OpenAI</p>
+          </div>
+          <span id="m1Status" class="ml-auto text-xs text-zinc-500"></span>
+        </div>
+        <div id="m1Response" class="response-box flex-1 p-5 text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
+          <span class="text-zinc-600">Esperando pregunta...</span>
+        </div>
+      </div>
+
+      <!-- Model 2 -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
+        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-zinc-800 bg-orange-950/20">
+          <div class="w-9 h-9 rounded-lg bg-orange-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-rocket text-orange-400 text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-orange-300">Grok</h3>
+            <p class="text-xs text-zinc-500">xAI</p>
+          </div>
+          <span id="m2Status" class="ml-auto text-xs text-zinc-500"></span>
+        </div>
+        <div id="m2Response" class="response-box flex-1 p-5 text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
+          <span class="text-zinc-600">Esperando pregunta...</span>
+        </div>
+      </div>
+
+      <!-- Model 3 -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
+        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-zinc-800 bg-emerald-950/20">
+          <div class="w-9 h-9 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-brain text-emerald-400 text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-emerald-300">Claude</h3>
+            <p class="text-xs text-zinc-500">Anthropic</p>
+          </div>
+          <span id="m3Status" class="ml-auto text-xs text-zinc-500"></span>
+        </div>
+        <div id="m3Response" class="response-box flex-1 p-5 text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
+          <span class="text-zinc-600">Esperando pregunta...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best Combined Answer -->
+    <div class="bg-gradient-to-br from-amber-950/40 to-yellow-950/30 border border-amber-700/50 rounded-xl overflow-hidden">
+      <div class="flex items-center gap-3 px-5 py-3.5 border-b border-amber-800/40">
+        <div class="w-9 h-9 rounded-lg bg-amber-500/20 flex items-center justify-center">
+          <i class="fa-solid fa-trophy text-amber-400 text-lg"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-amber-300">Mejor respuesta combinada</h3>
+          <p class="text-xs text-amber-200/60">Síntesis de las 3 ideas anteriores</p>
+        </div>
+        <span id="bestStatus" class="ml-auto text-xs text-amber-200/60"></span>
+      </div>
+      <div id="bestResponse" class="p-5 text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap min-h-[120px]">
+        <span class="text-zinc-500">Aquí aparecerá la mejor idea después de que los 3 respondan...</span>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-zinc-600 mt-10">
+      Los 3 responden en paralelo → luego se genera la mejor versión combinando sus ideas
+    </p>
+  </div>
+
+  <script>
+    const MODELS = {
+      m1: { id: 'openai/gpt-oss-20b',  name: 'ChatGPT' },
+      m2: { id: 'openai/gpt-oss-120b', name: 'Grok' },
+      m3: { id: 'qwen/qwen3.8-27b',    name: 'Claude' }
+    };
+
+    const answers = { m1: null, m2: null, m3: null };
+
+    function setLoading(key) {
+      const el = document.getElementById(key + 'Response');
+      const status = document.getElementById(key + 'Status');
+      status.textContent = 'Pensando...';
+      status.className = 'ml-auto text-xs text-amber-400';
+      el.innerHTML = `
+        <div class="flex items-center gap-1.5 text-zinc-500 pt-2">
+          <div class="loading-dot w-2 h-2 bg-zinc-500 rounded-full"></div>
+          <div class="loading-dot w-2 h-2 bg-zinc-500 rounded-full"></div>
+          <div class="loading-dot w-2 h-2 bg-zinc-500 rounded-full"></div>
+        </div>`;
+    }
+
+    function setResponse(key, text, isError = false) {
+      const el = document.getElementById(key + 'Response');
+      const status = document.getElementById(key + 'Status');
+      status.textContent = isError ? 'Error' : 'Listo';
+      status.className = isError ? 'ml-auto text-xs text-red-400' : 'ml-auto text-xs text-green-400';
+      el.textContent = text;
+      answers[key] = isError ? null : text;
+    }
+
+    async function callModel(modelId, messages, apiKey) {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages,
+          temperature: 0.7,
+          max_tokens: 2048
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Error HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || 'Sin respuesta';
+    }
+
+    async function generateBestAnswer(question, apiKey) {
+      const status = document.getElementById('bestStatus');
+      const el = document.getElementById('bestResponse');
+
+      status.textContent = 'Combinando...';
+      status.className = 'ml-auto text-xs text-amber-400';
+      el.innerHTML = `
+        <div class="flex items-center gap-1.5 text-zinc-500">
+          <div class="loading-dot w-2 h-2 bg-amber-500 rounded-full"></div>
+          <div class="loading-dot w-2 h-2 bg-amber-500 rounded-full"></div>
+          <div class="loading-dot w-2 h-2 bg-amber-500 rounded-full"></div>
+        </div>`;
+
+      const prompt = `Eres un experto en síntesis. Tienes 3 respuestas diferentes a la misma pregunta, generadas por 3 modelos de IA al mismo tiempo.
+
+Tu tarea es:
+1. Analizar las 3 respuestas.
+2. Extraer las mejores ideas de cada una.
+3. Combinarlas en UNA sola respuesta final que sea más completa, clara y útil que cualquiera de las tres por separado.
+4. Si hay contradicciones, elige la opción más razonable o explica ambas brevemente.
+5. Responde directamente con la mejor respuesta final (no digas "aquí está la síntesis" ni menciones los modelos).
+
+Pregunta original:
+${question}
+
+--- Respuesta 1 (ChatGPT) ---
+${answers.m1 || '(No disponible)'}
+
+--- Respuesta 2 (Grok) ---
+${answers.m2 || '(No disponible)'}
+
+--- Respuesta 3 (Claude) ---
+${answers.m3 || '(No disponible)'}
+
+Ahora escribe la mejor respuesta combinada:`;
+
+      try {
+        const text = await callModel('openai/gpt-oss-120b', [
+          { role: 'user', content: prompt }
+        ], apiKey);
+
+        status.textContent = 'Listo';
+        status.className = 'ml-auto text-xs text-green-400';
+        el.textContent = text;
+      } catch (err) {
+        status.textContent = 'Error';
+        status.className = 'ml-auto text-xs text-red-400';
+        el.textContent = '❌ No se pudo generar la respuesta combinada: ' + err.message;
+      }
+    }
+
+    async function askAll() {
+      const question = document.getElementById('question').value.trim();
+      const apiKey = document.getElementById('apiKey').value.trim();
+
+      if (!question) {
+        alert('Escribe una pregunta primero');
+        return;
+      }
+      if (!apiKey) {
+        alert('Falta la API Key');
+        return;
+      }
+
+      const btn = document.getElementById('sendBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preguntando...';
+
+      // Reset
+      answers.m1 = answers.m2 = answers.m3 = null;
+      document.getElementById('bestResponse').innerHTML = '<span class="text-zinc-500">Esperando a que los 3 terminen...</span>';
+      document.getElementById('bestStatus').textContent = '';
+
+      const messages = [
+        { 
+          role: 'system', 
+          content: 'Estás respondiendo al mismo tiempo que otros 2 modelos de IA a la misma pregunta. Da tu mejor respuesta de forma clara y completa.' 
+        },
+        { role: 'user', content: question }
+      ];
+
+      // Llamar a los 3 en paralelo
+      const promises = Object.keys(MODELS).map(async (key) => {
+        setLoading(key);
+        try {
+          const text = await callModel(MODELS[key].id, messages, apiKey);
+          setResponse(key, text);
+        } catch (err) {
+          setResponse(key, `❌ ${err.message}`, true);
+        }
+      });
+
+      await Promise.all(promises);
+
+      // Generar la mejor respuesta combinada
+      await generateBestAnswer(question, apiKey);
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane text-sm"></i> Preguntar a los 3';
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', askAll);
+    
+    document.getElementById('question').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) askAll();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('question').value = '';
+      ['m1', 'm2', 'm3'].forEach(key => {
+        document.getElementById(key + 'Response').innerHTML = '<span class="text-zinc-600">Esperando pregunta...</span>';
+        document.getElementById(key + 'Status').textContent = '';
+      });
+      document.getElementById('bestResponse').innerHTML = '<span class="text-zinc-500">Aquí aparecerá la mejor idea después de que los 3 respondan...</span>';
+      document.getElementById('bestStatus').textContent = '';
+    });
+  </script>
+</body>
+</html>
